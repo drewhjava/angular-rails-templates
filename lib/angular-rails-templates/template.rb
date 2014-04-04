@@ -1,5 +1,6 @@
 require 'sprockets'
 require 'sprockets/engines'
+require 'htmlcompressor'
 
 module AngularRailsTemplates
   class Template < Tilt::Template
@@ -37,11 +38,13 @@ module AngularRailsTemplates
     end
 
     def render_script_template(path, data)
+       compressor = HtmlCompressor::Compressor.new(remove_intertag_spaces: true)
+       data_final = compressor.compress(data.to_json)
       %Q{
 window.AngularRailsTemplates || (window.AngularRailsTemplates = angular.module(#{module_name}, []));
 
 window.AngularRailsTemplates.run(["$templateCache",function($templateCache) {
-  $templateCache.put(#{path.inspect}, #{data.to_json});
+  $templateCache.put(#{path.inspect}, #{data_final});
 }]);
       }
     end
