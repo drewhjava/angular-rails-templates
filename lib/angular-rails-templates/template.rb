@@ -3,6 +3,7 @@ require 'sprockets/engines'
 require 'htmlcompressor'
 
 module AngularRailsTemplates
+
   class Template < Tilt::Template
     def self.default_mime_type
       'application/javascript'
@@ -39,7 +40,7 @@ module AngularRailsTemplates
 
     def render_script_template(path, data)
        compressor = HtmlCompressor::Compressor.new(remove_intertag_spaces: true)
-       data_final = compressor.compress(data.to_json)
+       data_final = compressor.compress(data.to_angular_template)
       %Q{
 window.AngularRailsTemplates || (window.AngularRailsTemplates = angular.module(#{module_name}, []));
 
@@ -49,6 +50,32 @@ window.AngularRailsTemplates.run(["$templateCache",function($templateCache) {
       }
     end
 
+  end
+end
+
+
+class String
+  JS_ESCAPE_MAP = {
+    '\\'    => '\\\\',
+    '</'    => '</',
+    "\r\n"  => '',
+    "\n"    => '',
+    "\r"    => '',
+    "\t"    => '',
+    '"'     => '\\"',
+    "'"     => "\'"
+  }
+
+  def to_angular_template
+    %("#{json_escape}")
+  end
+
+  private
+
+  def json_escape
+    gsub(/(\\|<\/|\r\n|\342\200\250|\342\200\251|[\t\n\r"'])/u) { |match|
+      JS_ESCAPE_MAP[match]
+    }
   end
 end
 
